@@ -1,0 +1,51 @@
+﻿@model System.Collections.Generic.IEnumerable<WebApplication1.Models.Collages>
+
+@{
+    ViewBag.Title = "Collages";
+}
+
+<h2>Collages</h2>
+
+<div>
+    <hr />
+    <table class="table" style="background-color:lightgray">
+        <tr>
+            <th>
+                Number
+            </th>
+            <th>
+                YouSure?
+            </th>
+            <th>
+                SeeDat
+            </th>
+        </tr>
+        @foreach (var i in Model)
+        {
+            if (i.userID == ViewBag.UserID)
+            {
+                <tr>
+                    <th>
+                        @Html.DisplayFor(modelcollage => i.CollagesID);
+                    </th>
+                    @if (i.userID == ViewBag.CurrentUserID)
+                    {
+                        <th>
+                            @Html.ActionLink("DELETE", "DeleteCollage", "Manage", new { CollageID = i.CollagesID }, new { @class = "btn btn-danger", type = "button" })
+                        </th>
+                    }
+                    else
+                    {
+                        <th>
+                            <button type="button" class="btn btn-default" disabled="true" >DELETE</button>
+                        </th> 
+                    }
+                    <th>
+                        @Html.ActionLink("VIEW", "ViewCollage", "Home", new { CollageID = i.CollagesID, UserID = i.userID }, new { @class = "btn btn-primary", type = "button" })
+                    </th>
+
+                </tr>
+            }
+        }
+    </table>
+</div>

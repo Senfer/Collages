@@ -1,0 +1,77 @@
+﻿@model System.Collections.Generic.IEnumerable<WebApplication1.Models.ApplicationUser>
+@if (Request.IsAuthenticated)
+{
+    bool Banned = false;
+    foreach( var i in Model)
+    {
+        if (User.Identity.Name == i.UserName && i.LockoutEnabled == true)
+        {
+            Banned = true;
+        }
+    }
+    if (!Banned)
+    {
+        ViewBag.Title = "ВЫ БЫЛИ ЗАБАНЕНЫ";
+        <h1 align ="center" class="alert">@ViewBag.Title.</h1>
+    }
+    else    
+    { 
+        <h2>Managing</h2>
+    <p class="text-success">@ViewBag.StatusMessage</p>
+    <div>
+        <hr />
+        <table class="table" style="background-color:lightgray">
+            <tr>
+                <th>
+                    Email
+                </th>
+                <th>
+                    Status
+                </th>
+                <th>
+                    Are you sure?
+                </th>
+                <th>
+                    Collages
+                </th>
+            </tr>
+            @foreach (var i in Model)
+            {
+                <tr>
+                    <th>
+                        @Html.DisplayFor(modeluser => i.Email);
+                    </th>
+                    <th>
+                        @if (i.LockoutEnabled == true)
+                        {
+                            @Html.ActionLink("BAN", "Ban", "Manage", new { id = i.Id }, new { @class = "btn btn-warning", type = "button" })
+                        }
+                        else
+                        {
+                            @Html.ActionLink("UNBAN", "Ban", "Manage", new { id = i.Id }, new { @class = "btn btn-success", type = "button" })
+                        }
+                    </th>
+                    <th>
+                        @Html.ActionLink("DELETE","Delete", "Manage", new { id = i.Id }, new { @class = "btn btn-danger", type = "button" })  
+                    </th>
+                    <th>
+                        @if (i.UserName == User.Identity.Name)
+                        {
+                            @Html.ActionLink("VIEW/CHANGE", "Collages", "Manage", new { UserID = i.Id }, new { @class = "btn btn-primary", type = "button" })
+                        }
+                        else
+                        {
+                            @Html.ActionLink("VIEW", "Collages", "Manage", new { UserID = i.Id }, new { @class = "btn btn-primary", type = "button" })
+                        } 
+                    </th>
+                </tr>
+            }
+        </table>
+    </div>
+    }
+
+}
+
+
+
+

@@ -1,0 +1,220 @@
+﻿
+@{
+    ViewBag.Title = "Home";
+    if (ViewBag.CollageID == null)
+    {
+        ViewBag.CollageID = 0; 
+    }
+}
+
+
+<style>
+    .btn-task6 {
+        color: lightgray;
+        background-color: #333333;
+    }
+        .btn-task6:hover {
+            color: white;
+            background-color: #333333;  
+        }
+        .btn-task6:active {
+            color: white;
+            background-color: black;  
+        }
+        .btn-task6:focus {
+            color: white;
+            background-color: #333333;  
+        }
+</style>
+@if(Request.IsAuthenticated){
+    <div id="main" style="position:relative; height:640px">
+        <div style="position:relative; top:20px; left:0px; width:800px; height:600px; background-color: white">
+            <canvas id="paint" height="600" width="800" style="border: gray inset 6px;"></canvas>
+        </div>
+       @if(ViewBag.NonModify == null)
+        {
+        <div class="btn-group-vertical" style="position:relative; left: 820px ;bottom:580px">
+            <button type="button" id="Sepia" class="btn btn-task6">Apply Sepia</button>
+            <button type="button" id="GrayScale" class="btn btn-task6">Apply GrayScale</button>
+            <button type="button" id="Contrast" class="btn btn-task6">Apply Contrast</button>
+            <button type="button" id="Negative" class="btn btn-task6">Apply Negative</button>
+            <br>
+            <button type="button" id="PopFilter" class="btn btn-task6">Remove last filter</button>
+            <button type="button" id="NoFilters" class="btn btn-task6">Remove all filters</button>
+            <br>
+            <button type="button" id="zBufferFirst" class="btn btn-task6">Move to foreground</button>
+            <button type="button" id="zBufferUp" class="btn btn-task6">Bring up</button>
+            <button type="button" id="zBufferDown" class="btn btn-task6">Send back</button>
+            <button type="button" id="zBufferLast" class="btn btn-task6">Move to background</button>
+            <br>
+            <button type="button" id="Clear" class="btn btn-task6">Clear</button>
+            <br>
+            <input type="text" id="Search" class="form-control">
+            <button type="button" id="SearchButton" class="btn btn-task6">Search images</button>
+            <br>
+            <br>
+            <form action="/Home/SaveCollage" method="post">
+                <input type="hidden" id="JSON" name="stringedJSON">
+                <input type="hidden" id="ID" name="userID">
+                <input type="hidden" id="CID" name="collageID">
+                <input type="submit" id="Save" class="btn btn-task6" action="Home/SaveCollage" value="Save">
+            </form>
+        </div>
+       }
+    </div>
+
+
+    <div align="center" style="background-color: white; height:100px; width:1000px">
+        <canvas id="notpaint" height="100" width="1000" style="border: gray inset 6px;"></canvas>
+    </div>
+    <script src="~/Scripts/fabric.js"></script>
+    <script type="text/javascript">
+    var currentImage;
+    var draggingImage;
+
+    if("@ViewBag.NonModify" != "")
+    {
+        var canvas = new fabric.StaticCanvas('paint');
+        var canvas2 = new fabric.StaticCanvas('notpaint');
+    }
+    else
+    {
+        function setFilter(img, filter) {
+            img.filters.push(filter);
+            img.applyFilters(canvas.renderAll.bind(canvas));
+        }
+
+        document.getElementById("Sepia").onclick = function () {
+            setFilter(currentImage, new fabric.Image.filters.Sepia2())
+        }
+
+        document.getElementById("GrayScale").onclick = function () {
+            setFilter(currentImage, new fabric.Image.filters.Grayscale())
+        }
+
+        document.getElementById("Contrast").onclick = function () {
+            setFilter(currentImage, new fabric.Image.filters.Brightness({ brightness: 100 }))
+        }
+
+        document.getElementById("Negative").onclick = function () {
+            setFilter(currentImage, new fabric.Image.filters.Invert())
+        }
+
+        document.getElementById("PopFilter").onclick = function () {
+            currentImage.filters.pop();
+            currentImage.applyFilters(canvas.renderAll.bind(canvas));
+        }
+
+        document.getElementById("NoFilters").onclick = function () {
+            currentImage.filters = [];
+            currentImage.applyFilters(canvas.renderAll.bind(canvas));
+        }
+
+        document.getElementById("zBufferFirst").onclick = function () {
+            currentImage.bringToFront();
+        }
+
+        document.getElementById("zBufferUp").onclick = function () {
+            currentImage.bringForward();
+        }
+
+        document.getElementById("zBufferDown").onclick = function () {
+            currentImage.sendBackwards();
+        }
+
+        document.getElementById("zBufferLast").onclick = function () {
+            currentImage.sendToBack();
+        }
+
+        document.getElementById("Clear").onclick = function () {
+            canvas.clear();
+        }
+
+        document.getElementById("Save").onclick = function () {
+            var StringedJSON = canvas.toJSON();
+            document.getElementById("JSON").value = JSON.stringify(StringedJSON);
+            document.getElementById("ID").value = "@User.Identity.Name";
+            document.getElementById("CID").value = @ViewBag.CollageID;
+        }
+
+        var canvas = new fabric.Canvas('paint');
+        var canvas2 = new fabric.Canvas('notpaint');
+    }
+
+
+    canvas.selection = false;
+    canvas2.selection = false;
+
+    
+
+    if(@ViewBag.CollageID!=0)
+    {
+        canvas.loadFromJSON("@ViewBag.CollageJSON".replace(/&quot;/g, "\""));
+        $(window).load(function(){
+            canvas.renderAll();
+        })
+    }
+
+    document.getElementById("SearchButton").onclick = function () {
+        canvas2.clear();
+        var searchStr = document.getElementById("Search").value;
+        if (searchStr == false)
+            searchStr = 'cats';
+        var url = "https://pixabay.com/api/?username=Senfer&key=0cfa438e8d77cfac5c50&per_page=10&q=" + encodeURIComponent(searchStr);
+        $.getJSON(url, function (data) {
+            if (parseInt(data.totalHits) > 0)
+                $.each(data.hits, function (i, hit) {
+                    var imgObj = document.createElement('img');
+                    imgObj.crossOrigin = 'anonymous';
+                    imgObj.src = hit.webformatURL;
+                    imgObj.onload = function () {
+                        console.log('image loaded');
+                        var img = new fabric.Image(imgObj);
+                        img.width = 100;
+                        img.height = 100;
+                        img.left = i * img.width;
+                        canvas2.add(img);
+                    };
+
+                });
+            else
+                console.log('No hits');
+        });
+    }
+
+    canvas.on('object:selected', function (options) {
+        currentImage = options.target;
+    })
+
+    canvas2.on('object:selected', function (options) {
+        draggingImage = options.target;
+    })
+
+    $(document).on('mouseup', function (options) {
+        if (options.target.localName == 'canvas' && draggingImage != null) {
+            if ($(options.target).siblings().attr('id') == 'paint') {
+                var newImage = new fabric.Image();
+                newImage = draggingImage;
+                var dims = draggingImage.getOriginalSize();
+                draggingImage.remove();
+                newImage.left = (options.offsetX == undefined) ? options.layerX - (dims.width) / 2 : options.offsetX - (dims.width) / 2;
+                newImage.top = (options.offsetY == undefined) ? options.layerY - (dims.height) / 2 : options.offsetY - (dims.height) / 2;
+                newImage.width = dims.width;
+                newImage.height = dims.height;
+                canvas.add(newImage);
+                draggingImage = null;
+            }
+        }
+    })
+
+</script>
+}
+else
+{
+    <div id="main">
+        <h2>Index</h2>
+        <h3>АВТОРИЗИРУЙТЕСЬ ИЛИ ЗАРЕГИСТРИРУЙТЕСЬ ДЛЯ РАБОТЫ</h3>
+    </div>
+}
+
+
