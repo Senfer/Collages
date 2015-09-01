@@ -1,2 +1,0 @@
-# Collages
-Collages
